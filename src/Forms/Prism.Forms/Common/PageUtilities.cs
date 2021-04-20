@@ -60,9 +60,9 @@ namespace Prism.Common
         {
             switch (page)
             {
-                case MasterDetailPage mdp:
-                    DestroyPage(mdp.Master);
-                    DestroyPage(mdp.Detail);
+                case FlyoutPage flyout:
+                    DestroyPage(flyout.Flyout);
+                    DestroyPage(flyout.Detail);
                     break;
                 case TabbedPage tabbedPage:
                     foreach (var item in tabbedPage.Children.Reverse())
@@ -176,12 +176,12 @@ namespace Prism.Common
         {
             Page child = null;
 
-            if (target is MasterDetailPage)
-                child = ((MasterDetailPage)target).Detail;
-            else if (target is TabbedPage)
-                child = ((TabbedPage)target).CurrentPage;
-            else if (target is CarouselPage)
-                child = ((CarouselPage)target).CurrentPage;
+            if (target is FlyoutPage flyout)
+                child = flyout.Detail;
+            else if (target is TabbedPage tabbed)
+                child = tabbed.CurrentPage;
+            else if (target is CarouselPage carousel)
+                child = carousel.CurrentPage;
             else if (target is NavigationPage)
                 child = target.Navigation.NavigationStack.Last();
 
@@ -216,7 +216,14 @@ namespace Prism.Common
             return stackCount - 1;
         }
 
-        public static Page GetCurrentPage(Page mainPage)
+        public static Page GetCurrentPage(Page mainPage) =>
+            _getCurrentPage(mainPage);
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static void SetCurrentPageDelegate(Func<Page, Page> getCurrentPageDelegate) =>
+            _getCurrentPage = getCurrentPageDelegate;
+
+        private static Func<Page, Page> _getCurrentPage = mainPage =>
         {
             var page = mainPage;
 
@@ -225,7 +232,7 @@ namespace Prism.Common
                 page = lastModal;
 
             return GetOnNavigatedToTargetFromChild(page);
-        }
+        };
 
         public static void HandleSystemGoBack(Page previousPage, Page currentPage)
         {
